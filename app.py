@@ -5,7 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'teknofest_api_projem_2026'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres.eqgqbkqjszkiokktamhi:lennebraha38.@aws-0-eu-central-1.pooler.supabase.com:6543/postgres'
 
 # --- SUPABASE BAĞLANTI AYARI ---
 # Adım 1'de kopyaladığın URI bağlantısını buraya yapıştıracaksın Faruk.
