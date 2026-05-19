@@ -1,5 +1,6 @@
 import os
-from flask import Flask, render_template, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # Klasör yollarını Linux sunucusuna %100 uyumlu hale getiren kesin çözüm
 app = Flask(__name__, 
