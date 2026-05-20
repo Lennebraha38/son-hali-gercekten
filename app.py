@@ -69,21 +69,6 @@ def profil_kaydet():
         return jsonify({"durum": "basarili"}), 200
     except Exception as e:
         return jsonify({"durum": "hata", "mesaj": str(e)}), 500
-        # KULLANICI PROFİLİNİ VERİTABANINDAN GETİRME API'Sİ
-@app.route('/api/profil-getir/<userId>', methods=['GET'])
-def profil_getir(userId):
-    if kullanicilar_tablosu is None:
-        return jsonify({"durum": "hata", "mesaj": "Veritabanı bağlantısı yok"}), 500
-    try:
-        # Veritabanında bu kullanıcı ID'sine ait dökümanı ara
-        kullanici = kullanicilar_tablosu.find_one({"userId": userId}, {"_set": 0, "_id": 0})
-        
-        if kullanici:
-            return jsonify({"durum": "basarili", "profil": kullanici}), 200
-        else:
-            return jsonify({"durum": "bulunamadi", "mesaj": "Henüz bulutta profil yok"}), 404
-    except Exception as e:
-        return jsonify({"durum": "hata", "mesaj": str(e)}), 500
 # BU KODU APP.PY DOSYANIN EN SONUNA YAPIŞTIR
 @app.route('/api/profil-getir/<userId>', methods=['GET'])
 def profil_getir(userId):
