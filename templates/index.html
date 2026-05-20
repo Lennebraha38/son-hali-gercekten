@@ -5927,7 +5927,60 @@
       </div>
     </div>
   </div>
+// ===== MONGODB VE LOCALSTORAGE KÖPRÜSÜ (SAYFA YENİLENİNCE GİTMEMESİ İÇİN) =====
+async function buluttanProfilOkuVeSistemeGiy() {
+    const localUser = localStorage.getItem('lb38_currentUser');
+    if (!localUser) return; 
+    
+    const currentUser = JSON.parse(localUser);
+    
+    try {
+        // Render üzerinden MongoDB'deki en güncel veriyi istiyoruz
+        const response = await fetch(`/api/profil-getir/${currentUser.id}`);
+        const sonuc = await response.json();
+        
+        if (sonuc.durum === "basarili" && sonuc.profil) {
+            const p = sonuc.profil;
+            
+            // 1. Form kutularını dolduruyoruz
+            if(document.getElementById('pf-ad') && p.ad) document.getElementById('pf-ad').value = p.ad;
+            if(document.getElementById('pf-soyad') && p.soyad) document.getElementById('pf-soyad').value = p.soyad;
+            if(document.getElementById('pf-uni') && p.universite) document.getElementById('pf-uni').value = p.universite;
+            if(document.getElementById('pf-alan') && p.alan) document.getElementById('pf-alan').value = p.alan;
+            if(document.getElementById('pf-sehir') && p.sehir) document.getElementById('pf-sehir').value = p.sehir;
+            if(document.getElementById('pf-skills') && p.yetenekler) document.getElementById('pf-skills').value = p.yetenekler;
+            if(document.getElementById('pf-bio') && p.biyografi) document.getElementById('pf-bio').value = p.biyografi;
+            if(document.getElementById('pf-iletisim') && p.iletisim) document.getElementById('pf-iletisim').value = p.iletisim;
+            if(document.getElementById('pf-saat') && p.saat) document.getElementById('pf-saat').value = p.saat;
+            
+            // 2. KRİTİK ADIM: Sitenin 5000 satırlık kodunun okuduğu hafızayı buluttan gelenle güncelliyoruz!
+            // Böylece site yenilendiğinde eski verileri ekrana basamaz, mecburen buluttaki yeni veriyi basar.
+            currentUser.ad = p.ad;
+            currentUser.soyad = p.soyad;
+            currentUser.universite = p.universite;
+            currentUser.alan = p.alan;
+            currentUser.sehir = p.sehir;
+            currentUser.yetenekler = p.yetenekler;
+            currentUser.biyografi = p.biyografi;
+            currentUser.iletisim = p.iletisim;
+            currentUser.saat = p.saat;
+            
+            localStorage.setItem('lb38_currentUser', JSON.stringify(currentUser));
+            
+            // Sitenin kendi içindeki profil kartı yazılarını güncelleyen kodlar varsa (Örn: Ad Soyad başlığı)
+            // Sayfayı tamamen yenilemeden güncel veriyi göstermek için buraya ekleyebilirsin.
+            console.log("Bulut verileri yerel hafıza ile eşitlendi!");
+        }
+    } catch (error) {
+        console.error("Veritabanı eşitleme hatası:", error);
+    }
+}
 
+// SAYFA HER AÇILDIĞINDA VEYA YENİLENDİĞİNDE OTOMATİK ÇALIŞIR
+window.addEventListener('DOMContentLoaded', () => {
+    // Sitenin tamamen yüklenmesi için yarım saniye bekleyip buluttan veriyi çeker
+    setTimeout(buluttanProfilOkuVeSistemeGiy, 500);
+});
   <script>
   (function(){
     var KD = {
