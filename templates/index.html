@@ -6246,3 +6246,44 @@
 
 </body>
 </html>
+// Sayfa açıldığında MongoDB'den güncel verileri çeken fonksiyon
+async function buluttanProfilYukle() {
+    const localUser = localStorage.getItem('lb38_currentUser');
+    if (!localUser) return; // Giriş yapmış kullanıcı yoksa dur
+    
+    const currentUser = JSON.parse(localUser);
+    
+    try {
+        // Render sunucumuzdan veritabanındaki güncel profili istiyoruz
+        const response = await fetch(`/api/profil-getir/${currentUser.id}`);
+        const sonuc = await response.json();
+        
+        if (sonuc.durum === "basarili" && sonuc.profil) {
+            const p = sonuc.profil;
+            
+            // Veritabanından gelen verileri HTML elementlerinin içine dolduruyoruz
+            if(document.getElementById('pf-ad') && p.ad) document.getElementById('pf-ad').value = p.ad;
+            if(document.getElementById('pf-soyad') && p.soyad) document.getElementById('pf-soyad').value = p.soyad;
+            if(document.getElementById('pf-uni') && p.universite) document.getElementById('pf-uni').value = p.universite;
+            if(document.getElementById('pf-alan') && p.alan) document.getElementById('pf-alan').value = p.alan;
+            if(document.getElementById('pf-sehir') && p.sehir) document.getElementById('pf-sehir').value = p.sehir;
+            if(document.getElementById('pf-skills') && p.yetenekler) document.getElementById('pf-skills').value = p.yetenekler;
+            if(document.getElementById('pf-bio') && p.biyografi) document.getElementById('pf-bio').value = p.biyografi;
+            if(document.getElementById('pf-iletisim') && p.iletisim) document.getElementById('pf-iletisim').value = p.iletisim;
+            if(document.getElementById('pf-saat') && p.saat) document.getElementById('pf-saat').value = p.saat;
+            
+            // Sitedeki statik profil kartı alanları varsa onları da güncelle
+            // Örneğin: document.getElementById('profile-name-display').innerText = p.ad + " " + p.soyad;
+            
+            console.log("Profil verileri buluttan başarıyla senkronize edildi!");
+        }
+    } catch (error) {
+        console.error("Buluttan profil yüklenirken hata:", error);
+    }
+}
+
+// SİTE İLK AÇILDIĞINDA BU FONKSİYONU OTOMATİK ÇALIŞTIR
+window.addEventListener('DOMContentLoaded', () => {
+    // Sitenin kendi ilk yükleme fonksiyonlarının hemen yanına bunu ekle
+    setTimeout(buluttanProfilYukle, 1000); // 1 saniye gecikmeyle buluttan verileri çek
+});
