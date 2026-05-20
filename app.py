@@ -5,7 +5,7 @@ import pymongo
 app = Flask(__name__)
 
 # Kopyaladığın linki buraya yapıştır. <username> ve <password> kısımlarını kendi belirlediklerinle değiştir!
-MONGO_URI = "mongodb+srv://kullanici_adin:SIFREN@cluster0.xxxx.mongodb.net/?retryWrites=true&w=majority"
+MONGO_URI = "mongodb+srv://Lennebraha38:<db_password>@cluster0.hxebmqh.mongodb.net/?appName=Cluster0"
 
 try:
     client = pymongo.MongoClient(MONGO_URI)
