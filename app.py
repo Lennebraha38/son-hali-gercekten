@@ -43,25 +43,26 @@ def log_ekle():
         return jsonify({"durum": "hata", "mesaj": str(e)}), 500
 
 # 2. KULLANICI PROFİLİNİ BULUTA KAYDETME API'Sİ
+# KULLANICI PROFİLİNİ BULUTA KAYDETME API'Sİ (MongoDB Atlas İçin)
 @app.route('/api/profil-kaydet', methods=['POST'])
 def profil_kaydet():
     try:
         veri = request.json
         kullanici_id = veri.get('userId')
-        profil_data = veri.get('profil')
+        profil_data = veri.get('profil') # JavaScript'ten gelen profilPaketi
         
-        # Kullanıcıyı güncelle veya yoksa yeni döküman oluştur (upsert=True)
+        # Kullanıcının profil bilgilerini MongoDB'deki 'users' tablosunda güncelle veya oluştur
         kullanicilar_tablosu.update_one(
             {"userId": kullanici_id},
             {"$set": profil_data},
             upsert=True
         )
         
-        # Profil güncellendiğinde bunu otomatik olarak loglara da işleyelim
+        # Profil güncellendiğinde bunu otomatik olarak hareket kayıtlarına (logs) işleyelim
         hareket_kayitlari_tablosu.insert_one({
             "userId": kullanici_id,
             "islem": "Profil Güncelleme",
-            "detay": f"Kullanıcı profil bilgilerini ({profil_data.get('name')}) güncelledi.",
+            "detay": f"{profil_data.get('ad')} {profil_data.get('soyad')} profil bilgilerini güncelledi.",
             "tarih": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         })
         
