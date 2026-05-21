@@ -11,7 +11,7 @@ app = Flask(__name__)
 # SQLAlchemy entegrasyonu
 # Önemli: Neon adresi 'postgres://' ile başlar ancak SQLAlchemy modern sürümlerinde 'postgresql://' ister.
 # Bu yüzden adresi koda alırken küçük bir düzeltme yapıyoruz.
-uri = os.getenv("DATABASE_URL")
+uri = os.getenv("DATABASE_URI")
 if uri and uri.startswith("postgres://"):
     uri = uri.replace("postgres://", "postgresql://", 1)
 
