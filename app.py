@@ -1,84 +1,42 @@
-from flask import Flask, request, jsonify, render_template
-from datetime import datetime
-import pymongo
+import os
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from dotenv import load_dotenv
+
+# .env dosyasındaki değişkenleri yükle
+load_dotenv()
 
 app = Flask(__name__)
 
-# Kopyaladığın linki buraya yapıştır. <username> ve <password> kısımlarını kendi belirlediklerinle değiştir!
-MONGO_URI = "mongodb+srv://Lennebraha38:<db_password>@cluster0.hxebmqh.mongodb.net/?appName=Cluster0"
+# SQLAlchemy entegrasyonu
+# Önemli: Neon adresi 'postgres://' ile başlar ancak SQLAlchemy modern sürümlerinde 'postgresql://' ister.
+# Bu yüzden adresi koda alırken küçük bir düzeltme yapıyoruz.
+uri = os.getenv("DATABASE_URL")
+if uri and uri.startswith("postgres://"):
+    uri = uri.replace("postgres://", "postgresql://", 1)
 
-try:
-    client = pymongo.MongoClient(MONGO_URI)
-    db = client.lennebraha38_db
-    kullanicilar_tablosu = db.users
-    hareket_kayitlari_tablosu = db.logs
-    print("MongoDB Atlas bağlantısı başarılı!")
-except Exception as e:
-    print(f"Veritabanı bağlantı hatası: {e}")
+app.config['SQLALCHEMY_DATABASE_URL'] = uri
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+
+# Örnek Model (Tablo Yapısı)
+class Kullanici(db.Model):
+    __tablename__ = 'kullanicilar'
+    id = db.Column(db.Integer, primary_key=True)
+    isim = db.Column(db.String(80), nullable=False)
+    eposta = db.Column(db.String(120), unique=True, nullable=False)
+
+    def __repr__(self):
+        return f'<Kullanici {self.isim}>'
+
+# Tabloları Neon üzerinde otomatik oluşturmak için (İlk çalıştırmada bir kez gerekir)
+with app.app_context():
+    db.create_all()
 
 @app.route('/')
-def index():
-    # Şablon klasöründeki index.html dosyanı render eder
-    return render_template('index.html')
+def ana_sayfa():
+    return "Neon Veritabanı Bağlantısı Başarılı!"
 
-# 1. HAREKETLERİ İŞLEM ALTINA ALMA (LOG) API'Sİ
-@app.route('/api/log-ekle', methods=['POST'])
-def log_ekle():
-    try:
-        veri = request.json
-        kullanici_id = veri.get('userId', 'Anonim')
-        yapilan_islem = veri.get('islem')  # Örn: "Giriş Yapıldı", "Profil Güncellendi"
-        detay = veri.get('detay', '')
-        
-        log_verisi = {
-            "userId": kullanici_id,
-            "islem": yapilan_islem,
-            "detay": detay,
-            "tarih": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        }
-        
-        hareket_kayitlari_tablosu.insert_one(log_verisi)
-        return jsonify({"durum": "basarili"}), 200
-    except Exception as e:
-        return jsonify({"durum": "hata", "mesaj": str(e)}), 500
-
-# 2. KULLANICI PROFİLİNİ BULUTA KAYDETME API'Sİ
-# KULLANICI PROFİLİNİ BULUTA KAYDETME API'Sİ (MongoDB Atlas İçin)
-@app.route('/api/profil-kaydet', methods=['POST'])
-def profil_kaydet():
-    try:
-        veri = request.json
-        kullanici_id = veri.get('userId')
-        profil_data = veri.get('profil') # JavaScript'ten gelen profilPaketi
-        
-        # Kullanıcının profil bilgilerini MongoDB'deki 'users' tablosunda güncelle veya oluştur
-        kullanicilar_tablosu.update_one(
-            {"userId": kullanici_id},
-            {"$set": profil_data},
-            upsert=True
-        )
-        
-        # Profil güncellendiğinde bunu otomatik olarak hareket kayıtlarına (logs) işleyelim
-        hareket_kayitlari_tablosu.insert_one({
-            "userId": kullanici_id,
-            "islem": "Profil Güncelleme",
-            "detay": f"{profil_data.get('ad')} {profil_data.get('soyad')} profil bilgilerini güncelledi.",
-            "tarih": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        })
-        
-        return jsonify({"durum": "basarili"}), 200
-    except Exception as e:
-        return jsonify({"durum": "hata", "mesaj": str(e)}), 500
-# BU KODU APP.PY DOSYANIN EN SONUNA YAPIŞTIR
-@app.route('/api/profil-getir/<userId>', methods=['GET'])
-def profil_getir(userId):
-    if kullanicilar_tablosu is None:
-        return jsonify({"durum": "hata", "mesaj": "Veritabanı bağlantısı yok"}), 500
-    try:
-        kullanici = kullanicilar_tablosu.find_one({"userId": userId}, {"_id": 0})
-        if kullanici:
-            return jsonify({"durum": "basarili", "profil": kullanici}), 200
-        else:
-            return jsonify({"durum": "bulunamadi"}), 404
-    except Exception as e:
-        return jsonify({"durum": "hata", "mesaj": str(e)}), 500
+if __name__ == '__main__':
+    app.run(debug=True)
